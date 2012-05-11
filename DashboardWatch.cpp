@@ -13,6 +13,7 @@
      m_RedGreenIcon(":/DashboardWatch/red-green-dot.png"),
      m_QuestionIcon(":/DashboardWatch/question.png"),
      m_PreviousResult(-1),
+     m_Message("The Dashboard status is unknown"),
      m_MessageTime(6000)
   {
     // setup internals
@@ -24,7 +25,11 @@
     createActions();
     createTrayIcon();
 
+    m_StatusLabel = new QLabel;
+    m_StatusLabel->setText(m_Message);
     QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout->setContentsMargins(4,4,4,4);
+    mainLayout->addWidget(m_StatusLabel);
     mainLayout->addWidget(m_OptionsGroupBox);
     setLayout(mainLayout);
 
@@ -113,6 +118,7 @@
                                m_Message,
                                QSystemTrayIcon::Information, m_MessageTime);
        m_TrayIcon->setToolTip(m_Message);
+       m_StatusLabel->setText(m_Message);
        m_PreviousResult = result;
      }
  }

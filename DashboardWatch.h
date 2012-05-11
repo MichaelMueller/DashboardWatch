@@ -42,6 +42,8 @@ private:
     void createActions();
     void createTrayIcon();
 
+    QLabel* m_StatusLabel;
+
     QLabel* m_UpdateRateLabel;
     QSpinBox* m_UpdateRateSpinBox;
     QGridLayout* m_OptionsGroupBoxLayout;
