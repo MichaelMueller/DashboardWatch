@@ -4,6 +4,7 @@
 #include <QSystemTrayIcon>
 #include <QWidget>
 #include <QGridLayout>
+#include <QSettings>
 #include <QtNetwork/QNetworkAccessManager>
 
 class QAction;
@@ -31,6 +32,7 @@ protected:
 
 private slots:
     void on_UpdateRateSpinBoxValue_Changed( int i );
+    void on_AutoStartCheckBox_clicked( bool checked );
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
     void replyFinished(QNetworkReply*);
     void fetch();
@@ -41,11 +43,16 @@ private:
     void createOptionsGroupBox();
     void createActions();
     void createTrayIcon();
+    void loadSettings();
+    void saveSettings();
+    void setAutoStart(bool autostart);
 
     QLabel* m_StatusLabel;
 
     QLabel* m_UpdateRateLabel;
     QSpinBox* m_UpdateRateSpinBox;
+    QLabel* m_AutoStartLabel;
+    QCheckBox* m_AutoStartCheckBox;
     QGridLayout* m_OptionsGroupBoxLayout;
     QGroupBox* m_OptionsGroupBox;
 
@@ -66,6 +73,8 @@ private:
     QString m_Message;
     int m_MessageTime;
     QString m_Title;
+    QSettings m_Settings;
+
 };
 
 #endif

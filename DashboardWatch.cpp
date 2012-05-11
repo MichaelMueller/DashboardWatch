@@ -13,10 +13,15 @@
      m_GreenIcon(":/DashboardWatch/green-dot.png"),
      m_RedGreenIcon(":/DashboardWatch/red-green-dot.png"),
      m_QuestionIcon(":/DashboardWatch/question.png"),
-     m_PreviousResult(-1),
-     m_Message("The Dashboard status is unknown"),
+     m_PreviousResult(-2),
+     m_Message(""),
      m_MessageTime(6000),
-     m_Title(QString("DashboardWatch v%1.%2.%3").arg(DASHBOARDWATCH_MAJOR_VERSION).arg(DASHBOARDWATCH_MINOR_VERSION).arg(DASHBOARDWATCH_PATCH_VERSION))
+     m_Title(
+      QString("DashboardWatch v%1.%2.%3")
+      .arg(DASHBOARDWATCH_MAJOR_VERSION)
+      .arg(DASHBOARDWATCH_MINOR_VERSION)
+      .arg(DASHBOARDWATCH_PATCH_VERSION) ),
+     m_Settings( "settings.ini", QSettings::IniFormat, this )
   {
     // setup internals
     m_UpdateTimer = new QTimer(this);
@@ -30,6 +35,7 @@
     m_StatusLabel = new QLabel;
     m_StatusLabel->setText(m_Message);
     QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout->setContentsMargins( 4,4,4,4 );
     mainLayout->addWidget(m_StatusLabel);
     mainLayout->addWidget(m_OptionsGroupBox);
     setLayout(mainLayout);
@@ -40,6 +46,9 @@
     // connect
     connect(m_UpdateRateSpinBox, SIGNAL( valueChanged (int) ),
             this, SLOT( on_UpdateRateSpinBoxValue_Changed(int) ));
+
+    connect(m_AutoStartCheckBox, SIGNAL( clicked (bool) ),
+            this, SLOT( on_AutoStartCheckBox_clicked( bool ) ));
 
     connect(m_TrayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
@@ -91,63 +100,73 @@
      m_Manager->get(QNetworkRequest(QUrl("http://mbits/git-status/getRepoStatus.php")));
  }
 
- void DashboardWatch::replyFinished(QNetworkReply* pReply)
- {
-   QNetworkReply::NetworkError error =
-     pReply->error();
-   
-   if( error == QNetworkReply::NoError )
-   {
+  void DashboardWatch::replyFinished(QNetworkReply* pReply)
+  {
+    QNetworkReply::NetworkError error =
+    pReply->error();
 
-     QByteArray data=pReply->readAll();
-     QString str(data);
+    int result = -1;
+    if( error == QNetworkReply::NoError )
+    {
+      QByteArray data=pReply->readAll();
+      QString str(data);
 
-     int result = str.toInt();
-     if( m_PreviousResult != result )
-     {
-       if( result == 0 )
-       {
-         m_Message = "MITK and MITK-MBI Dashboard are green";
-         this->setIcon( m_GreenIcon );
-       }
-       else if( result == 1 )
-       {
-         m_Message = "MITK-MBI Dashboard is red";
-         this->setIcon( m_RedGreenIcon );
-       }
-       else if( result == 2 )
-       {
-         m_Message = "MITK and MITK-MBI Dashboard are red";
-         this->setIcon( m_RedIcon );
-       }
-       m_PreviousResult = result;
-     }
-   }
-   else
-   {
-     this->setIcon( m_QuestionIcon );
-   }
+      result = str.toInt();
+    }
 
-   m_TrayIcon->showMessage(QString(m_Title),
-                           m_Message,
-                           QSystemTrayIcon::Information, m_MessageTime);
-   m_TrayIcon->setToolTip(m_Message);
-   m_StatusLabel->setText(m_Message);
- }
+    if( m_PreviousResult != result )
+    {
+      if( result == 0 )
+      {
+        m_Message = "MITK and MITK-MBI Dashboard are green";
+        this->setIcon( m_GreenIcon );
+      }
+      else if( result == 1 )
+      {
+        m_Message = "MITK-MBI Dashboard is red";
+        this->setIcon( m_RedGreenIcon );
+      }
+      else if( result == 2 )
+      {
+        m_Message = "MITK and MITK-MBI Dashboard are red";
+        this->setIcon( m_RedIcon );
+      }
+      else
+      {
+        m_Message = "The Dashboard status is unknown";
+        this->setIcon( m_QuestionIcon );
+      }
+
+      m_TrayIcon->showMessage(QString(m_Title),
+      m_Message,
+      QSystemTrayIcon::Information, m_MessageTime);
+      m_TrayIcon->setToolTip(m_Message);
+      m_StatusLabel->setText(m_Message);
+      m_PreviousResult = result;
+    }
+
+  }
 
  void DashboardWatch::createOptionsGroupBox()
  {
-
+   this->loadSettings();
    m_UpdateRateLabel = new QLabel(tr("Update Rate:"));
 
    m_UpdateRateSpinBox = new QSpinBox;
    m_UpdateRateSpinBox->setRange(1, 3600);
    m_UpdateRateSpinBox->setSuffix(" minutes");
-   m_UpdateRateSpinBox->setValue(2);
+   m_UpdateRateSpinBox->setValue( m_Settings.value("UpdateRate").toInt() );
+
+   m_AutoStartLabel = new QLabel(tr("Auto Start:"));
+   m_AutoStartCheckBox = new QCheckBox;
+   m_AutoStartCheckBox->setChecked( m_Settings.value("AutoStart").toBool() );
 
    m_OptionsGroupBoxLayout = new QGridLayout;
+   m_OptionsGroupBoxLayout->setContentsMargins( 4,4,4,4 );
    m_OptionsGroupBoxLayout->addWidget(m_UpdateRateLabel, 0, 0);
    m_OptionsGroupBoxLayout->addWidget(m_UpdateRateSpinBox, 0, 1);
+   m_OptionsGroupBoxLayout->addWidget(m_AutoStartLabel, 1, 0);
+   m_OptionsGroupBoxLayout->addWidget(m_AutoStartCheckBox, 1, 1);
 
    m_OptionsGroupBox = new QGroupBox(tr("Options"));
    m_OptionsGroupBox->setLayout(m_OptionsGroupBoxLayout);
@@ -173,7 +192,66 @@
 
  }
 
- void DashboardWatch::on_UpdateRateSpinBoxValue_Changed( int i )
- {
-   m_UpdateTimer->setInterval( i * 60 * 1000 );
- }
+void DashboardWatch::on_UpdateRateSpinBoxValue_Changed( int i )
+{
+  m_UpdateTimer->setInterval( i * 60 * 1000 );
+  this->saveSettings();
+}
+
+void DashboardWatch::on_AutoStartCheckBox_clicked( bool checked )
+{
+  std::cout << "on_AutoStartCheckBox_clicked" << std::endl;
+  this->saveSettings();
+  this->setAutoStart( checked );
+}
+ 
+void DashboardWatch::loadSettings()
+{
+  std::cout << "loading settings" << std::endl;
+  m_Settings.sync();
+  if( !m_Settings.contains("UpdateRate") )
+    m_Settings.setValue("UpdateRate", 2);
+  if( !m_Settings.contains("AutoStart") )
+    m_Settings.setValue("AutoStart", false);
+}
+
+void DashboardWatch::saveSettings()
+{
+  std::cout << "saving settings" << std::endl;
+  m_Settings.setValue("UpdateRate", m_UpdateRateSpinBox->value() );
+  m_Settings.setValue("AutoStart", m_AutoStartCheckBox->isChecked() );
+  m_Settings.sync();
+}
+
+void DashboardWatch::setAutoStart(bool autostart)
+{
+  #ifdef Q_WS_WIN
+  QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                      QSettings::NativeFormat);
+
+  if (autostart)
+  {
+    // Want to start on boot up
+    char** argv = qApp->argv();
+    std::cout << argv[0] << std::endl;
+    settings.setValue("DashboardWatch.exe", argv[0] );
+  } 
+  else 
+  {
+    // Do not want to start on boot up
+    settings.remove("DashboardWatch.exe");
+  }
+  #else
+        QMessageBox::critical(0, QObject::tr("DashboardWatch"),
+                              QObject::tr("Feature not implemented for the current platform") );
+        m_AutoStartCheckBox->setChecked(false);
+        this->saveSettings();
+  #endif
+
+  #ifdef Q_WS_MAC
+  #endif
+
+  #ifdef Q_WS_X11
+  #endif
+
+}
