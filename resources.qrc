@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="/DashboardWatch">
+    <file>green-dot.png</file>
+    <file>red-dot.png</file>
+    <file>red-green-dot.png</file>
+    <file>question.png</file>
+  </qresource>
+</RCC>
+
