@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "DashboardWatch.h"
+#include <DashboardWatchConfig.h>
 
   DashboardWatch::DashboardWatch()
    : m_Manager( new QNetworkAccessManager(this) ),
@@ -14,7 +15,8 @@
      m_QuestionIcon(":/DashboardWatch/question.png"),
      m_PreviousResult(-1),
      m_Message("The Dashboard status is unknown"),
-     m_MessageTime(6000)
+     m_MessageTime(6000),
+     m_Title(QString("DashboardWatch v%1.%2.%3").arg(DASHBOARDWATCH_MAJOR_VERSION).arg(DASHBOARDWATCH_MINOR_VERSION).arg(DASHBOARDWATCH_PATCH_VERSION))
   {
     // setup internals
     m_UpdateTimer = new QTimer(this);
@@ -28,13 +30,12 @@
     m_StatusLabel = new QLabel;
     m_StatusLabel->setText(m_Message);
     QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->setContentsMargins(4,4,4,4);
     mainLayout->addWidget(m_StatusLabel);
     mainLayout->addWidget(m_OptionsGroupBox);
     setLayout(mainLayout);
 
-    setWindowTitle(tr("DashboardWatch"));
-    this->setIcon( m_RedIcon );
+    setWindowTitle( m_Title );
+    this->setIcon( m_QuestionIcon );
 
     // connect
     connect(m_UpdateRateSpinBox, SIGNAL( valueChanged (int) ),
@@ -92,6 +93,11 @@
 
  void DashboardWatch::replyFinished(QNetworkReply* pReply)
  {
+   QNetworkReply::NetworkError error =
+     pReply->error();
+   
+   if( error == QNetworkReply::NoError )
+   {
 
      QByteArray data=pReply->readAll();
      QString str(data);
@@ -114,13 +120,19 @@
          m_Message = "MITK and MITK-MBI Dashboard are red";
          this->setIcon( m_RedIcon );
        }
-       m_TrayIcon->showMessage(QString("DashboardWatch"),
-                               m_Message,
-                               QSystemTrayIcon::Information, m_MessageTime);
-       m_TrayIcon->setToolTip(m_Message);
-       m_StatusLabel->setText(m_Message);
        m_PreviousResult = result;
      }
+   }
+   else
+   {
+     this->setIcon( m_QuestionIcon );
+   }
+
+   m_TrayIcon->showMessage(QString(m_Title),
+                           m_Message,
+                           QSystemTrayIcon::Information, m_MessageTime);
+   m_TrayIcon->setToolTip(m_Message);
+   m_StatusLabel->setText(m_Message);
  }
 
  void DashboardWatch::createOptionsGroupBox()
@@ -136,7 +148,6 @@
    m_OptionsGroupBoxLayout = new QGridLayout;
    m_OptionsGroupBoxLayout->addWidget(m_UpdateRateLabel, 0, 0);
    m_OptionsGroupBoxLayout->addWidget(m_UpdateRateSpinBox, 0, 1);
-   m_OptionsGroupBoxLayout->setContentsMargins(0,0,0,0);
 
    m_OptionsGroupBox = new QGroupBox(tr("Options"));
    m_OptionsGroupBox->setLayout(m_OptionsGroupBoxLayout);

@@ -65,6 +65,7 @@ private:
     int m_PreviousResult;
     QString m_Message;
     int m_MessageTime;
+    QString m_Title;
 };
 
 #endif
