@@ -17,13 +17,14 @@ INCLUDE(${QT_USE_FILE})
 ADD_DEFINITIONS(${QT_DEFINITIONS})
 
 # sources
-SET(DashboardWatch_SOURCES main.cpp DashboardWatch.cpp)
-SET(DashboardWatch_HEADERS DashboardWatch.h)
+SET(DashboardWatch_SOURCES main.cpp DashboardWatch.cpp DashboardWatchLogger.cpp)
+SET(DashboardWatch_HEADERS DashboardWatch.h DashboardWatchLogger.h)
+SET(DashboardWatch_QOBJECT_HEADERS DashboardWatch.h)
 SET(DashboardWatch_RCCS resources.qrc)
 
 # generate rules for building source files from the resources
 QT4_ADD_RESOURCES(DashboardWatch_RCC_SRCS ${DashboardWatch_RCCS})
-QT4_WRAP_CPP(DashboardWatch_HEADERS_MOC ${DashboardWatch_HEADERS})
+QT4_WRAP_CPP(DashboardWatch_HEADERS_MOC ${DashboardWatch_QOBJECT_HEADERS})
 
 # include dir
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
@@ -31,6 +32,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 # executable and link libraries
 ADD_EXECUTABLE( ${PROJECT_NAME} WIN32 MACOSX_BUNDLE
     ${DashboardWatch_HEADERS} 
+    ${DashboardWatch_QOBJECT_HEADERS} 
     ${DashboardWatch_SOURCES} 
     ${DashboardWatch_HEADERS_MOC}
     ${DashboardWatch_RCC_SRCS})    

@@ -1,9 +1,12 @@
 #include <QtGui>
 #include <QSharedMemory>
+#include <string>
+#include "DashboardWatchLogger.h"
 #include "DashboardWatch.h"
 
 int main(int argc, char *argv[])
 {
+  // int qapp
     QApplication app(argc, argv);
 
     // assert only one application
@@ -16,6 +19,24 @@ int main(int argc, char *argv[])
                             QObject::tr("Another DashboardWatch is already running. Will exit now."));
 	    return 1; // Exit already a process running 
     }
+
+    // parse cmd args
+    QString logFile;
+    bool logfileFound = false;
+    for( int i = 0; i < argc; i++ )
+    {
+      if( logfileFound )
+      {
+        logFile = argv[i]; 
+        logfileFound = false;
+      }
+      else if( std::string(argv[i]) == "--logfile" )
+        logfileFound = true; 
+    }
+
+    // init logging
+    DashboardWatchLogger::Initialize(logFile);
+    qDebug() << "Application started";
 
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {
         QMessageBox::critical(0, QObject::tr("DashboardWatch"),

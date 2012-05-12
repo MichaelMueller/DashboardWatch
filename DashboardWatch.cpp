@@ -1,9 +1,11 @@
 #include <QtGui>
+#include <QFileInfo>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
 #include <iostream>
 
 #include "DashboardWatch.h"
+#include "DashboardWatchLogger.h"
 #include <DashboardWatchConfig.h>
 
   DashboardWatch::DashboardWatch()
@@ -21,7 +23,8 @@
       .arg(DASHBOARDWATCH_MAJOR_VERSION)
       .arg(DASHBOARDWATCH_MINOR_VERSION)
       .arg(DASHBOARDWATCH_PATCH_VERSION) ),
-     m_Settings( "settings.ini", QSettings::IniFormat, this )
+     m_SettingsFilePath("settings.ini"),
+     m_Settings(m_SettingsFilePath , QSettings::IniFormat, this )
   {
     // setup internals
     m_UpdateTimer = new QTimer(this);
@@ -208,11 +211,19 @@ void DashboardWatch::on_AutoStartCheckBox_clicked( bool checked )
 void DashboardWatch::loadSettings()
 {
   std::cout << "loading settings" << std::endl;
+  
+  QFileInfo iniInfo( m_SettingsFilePath );
+  if( !iniInfo.exists() )
+    qWarning() << "Settings file " << m_SettingsFilePath.toAscii() << " does not exist";
+
   m_Settings.sync();
   if( !m_Settings.contains("UpdateRate") )
     m_Settings.setValue("UpdateRate", 2);
   if( !m_Settings.contains("AutoStart") )
     m_Settings.setValue("AutoStart", false);
+
+  qDebug() << "settings loaded: UpdateRate=" << m_Settings.value("UpdateRate").toInt() <<
+    ", AutoStart=" << m_Settings.value("AutoStart").toBool();
 }
 
 void DashboardWatch::saveSettings()
