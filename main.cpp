@@ -8,6 +8,8 @@ int main(int argc, char *argv[])
 {
   // int qapp
     QApplication app(argc, argv);
+    QCoreApplication::setApplicationName("DashboardWatch");
+    QCoreApplication::setOrganizationName("DKFZ");
 
     // assert only one application
     QString UniqueID("DashboardWatch");

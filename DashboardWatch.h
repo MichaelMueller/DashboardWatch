@@ -73,7 +73,6 @@ private:
     QString m_Message;
     int m_MessageTime;
     QString m_Title;
-    QString m_SettingsFilePath;
     QSettings m_Settings;
 
 };

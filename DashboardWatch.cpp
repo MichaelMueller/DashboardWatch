@@ -23,8 +23,10 @@
       .arg(DASHBOARDWATCH_MAJOR_VERSION)
       .arg(DASHBOARDWATCH_MINOR_VERSION)
       .arg(DASHBOARDWATCH_PATCH_VERSION) ),
-     m_SettingsFilePath("settings.ini"),
-     m_Settings(m_SettingsFilePath , QSettings::IniFormat, this )
+     m_Settings(QSettings::IniFormat, 
+      QSettings::UserScope,
+      QCoreApplication::organizationName(),
+      QCoreApplication::applicationName() )
   {
     // setup internals
     m_UpdateTimer = new QTimer(this);
@@ -210,11 +212,7 @@ void DashboardWatch::on_AutoStartCheckBox_clicked( bool checked )
  
 void DashboardWatch::loadSettings()
 {
-  std::cout << "loading settings" << std::endl;
-  
-  QFileInfo iniInfo( m_SettingsFilePath );
-  if( !iniInfo.exists() )
-    qWarning() << "Settings file " << m_SettingsFilePath.toAscii() << " does not exist";
+  qDebug() << "loading settings";
 
   m_Settings.sync();
   if( !m_Settings.contains("UpdateRate") )
@@ -228,7 +226,7 @@ void DashboardWatch::loadSettings()
 
 void DashboardWatch::saveSettings()
 {
-  std::cout << "saving settings" << std::endl;
+  qDebug() << "saving settings";
   m_Settings.setValue("UpdateRate", m_UpdateRateSpinBox->value() );
   m_Settings.setValue("AutoStart", m_AutoStartCheckBox->isChecked() );
   m_Settings.sync();
