@@ -1,0 +1,5 @@
+Target features for v1.1.0:
+- autostart for ubuntu
+- status icon in main window
+- fixed window size
+- readme containing build and usage instructions
