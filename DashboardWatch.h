@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QGridLayout>
 #include <QSettings>
+#include <QLocalServer>
 #include <QtNetwork/QNetworkAccessManager>
 
 class QAction;
@@ -26,6 +27,7 @@ public:
     DashboardWatch();
 
     void setVisible(bool visible);
+    bool GetConnected() const;
 
 protected:
     void closeEvent(QCloseEvent *event);
@@ -36,7 +38,7 @@ private slots:
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
     void replyFinished(QNetworkReply*);
     void fetch();
-
+    void on_NewLocalSocketConnection();
 
 private:
     void setIcon(QIcon& index);
@@ -74,7 +76,8 @@ private:
     int m_MessageTime;
     QString m_Title;
     QSettings m_Settings;
-
+    QLocalServer* m_LocalServer;
+    bool m_Connected;
 };
 
 #endif
