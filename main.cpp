@@ -1,54 +1,61 @@
 #include <QtGui>
-#include <QSharedMemory>
+#include <QLocalSocket>
+#include <Qt>
 #include <string>
 #include "DashboardWatchLogger.h"
 #include "DashboardWatch.h"
+#include "DashboardWatchConfig.h"
+
+QLocalServer* m_localServer;
 
 int main(int argc, char *argv[])
 {
   // int qapp
-    QApplication app(argc, argv);
-    QCoreApplication::setApplicationName("DashboardWatch");
-    QCoreApplication::setOrganizationName("DKFZ");
+  QApplication app(argc, argv);
 
-    // assert only one application
-    QString UniqueID("DashboardWatch");
-    QSharedMemory sharedMemory;
-    sharedMemory.setKey(UniqueID);
-
-    if (!sharedMemory.create(1)) {
+  // assure one application instance
+  QString uniqueID( DASHBOARDWATCH_UUID );
+  QLocalSocket socket;
+  socket.connectToServer(uniqueID);
+  if (socket.waitForConnected(500))
+  {
       QMessageBox::critical(0, QObject::tr("DashboardWatch"),
                             QObject::tr("Another DashboardWatch is already running. Will exit now."));
-	    return 1; // Exit already a process running 
-    }
+      return EXIT_FAILURE; // Exit already a process running
+  }
 
-    // parse cmd args
-    QString logFile;
-    bool logfileFound = false;
-    for( int i = 0; i < argc; i++ )
+  // some app specific params
+  QCoreApplication::setApplicationName( DASHBOARDWATCH_TITLE );
+  QCoreApplication::setOrganizationName("DKFZ");
+
+  // parse cmd args
+  QString logFile;
+  bool logfileFound = false;
+  for( int i = 0; i < argc; i++ )
+  {
+    if( logfileFound )
     {
-      if( logfileFound )
-      {
-        logFile = argv[i]; 
-        logfileFound = false;
-      }
-      else if( std::string(argv[i]) == "--logfile" )
-        logfileFound = true; 
+      logFile = argv[i];
+      logfileFound = false;
     }
+    else if( std::string(argv[i]) == "--logfile" )
+      logfileFound = true;
+  }
 
-    // init logging
-    DashboardWatchLogger::Initialize(logFile);
-    qDebug() << "Application started";
+  // init logging
+  DashboardWatchLogger::Initialize(logFile);
+  qDebug() << "Application started";
 
-    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
-        QMessageBox::critical(0, QObject::tr("DashboardWatch"),
-                              QObject::tr("I couldn't detect any system tray "
-                                          "on this system."));
-        return 1;
-    }
+  if (!QSystemTrayIcon::isSystemTrayAvailable())
+  {
+    QMessageBox::critical(0, QObject::tr("DashboardWatch"),
+    QObject::tr("I couldn't detect any system tray "
+      "on this system."));
+    return 1;
+  }
 
-    DashboardWatch DashboardWatch;
-    DashboardWatch.show();
-    DashboardWatch.hide();
-    return app.exec();
+  DashboardWatch _DashboardWatch;
+  _DashboardWatch.show();
+  _DashboardWatch.hide();
+  return app.exec();
 }

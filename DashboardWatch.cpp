@@ -18,15 +18,13 @@
      m_PreviousResult(-2),
      m_Message(""),
      m_MessageTime(6000),
-     m_Title(
-      QString("DashboardWatch v%1.%2.%3")
-      .arg(DASHBOARDWATCH_MAJOR_VERSION)
-      .arg(DASHBOARDWATCH_MINOR_VERSION)
-      .arg(DASHBOARDWATCH_PATCH_VERSION) ),
+     m_Title( QString(DASHBOARDWATCH_TITLE) ),
      m_Settings(QSettings::IniFormat, 
       QSettings::UserScope,
       QCoreApplication::organizationName(),
-      QCoreApplication::applicationName() )
+      QCoreApplication::applicationName() ),
+     m_LocalServer( new QLocalServer(this) ),
+     m_Connected(false)
   {
     // setup internals
     m_UpdateTimer = new QTimer(this);
@@ -64,6 +62,9 @@
     connect(m_UpdateTimer, SIGNAL(timeout()),
             this, SLOT(fetch()));
 
+    connect(m_LocalServer, SIGNAL(newConnection()), this, SLOT(on_NewLocalSocketConnection()));
+    m_LocalServer->listen( DASHBOARDWATCH_UUID );
+
     // show/start
     m_TrayIcon->show();
     m_UpdateTimer->start();
@@ -92,6 +93,16 @@
          hide();
          event->ignore();
      }
+ }
+ bool DashboardWatch::GetConnected() const
+ {
+   return m_Connected;
+ }
+
+ void DashboardWatch::on_NewLocalSocketConnection()
+ {
+   qDebug() << "new local socket connection";
+   m_Connected = true;
  }
 
  void DashboardWatch::setIcon(QIcon& icon)
