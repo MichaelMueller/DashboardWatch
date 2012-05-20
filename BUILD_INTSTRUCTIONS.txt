@@ -1,1 +1,0 @@
-use cmake and your favorite IDE to build!
