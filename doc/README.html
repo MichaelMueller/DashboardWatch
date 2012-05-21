@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+  <title>DashboardWatch</title>
+</head>
+
+<body>
+<h1>Beschreibung</h1>
+Simples Tray Icon zur &#220;berwachung des Dashboard Status der MITK/MBI Repos.<br />
+<img src="dw-screen1.png" width="440" height="221" alt="" />
+
+<h1>Installation</h1>
+Windows x32 ZIP Paket:
+<a href="http://mbits/git-status/DashboardWatch-1.0.0-win32.zip" target="_blank">DashboardWatch-1.0.0-win32.zip</a><br />
+Windows x32 ZIP Paket:
+<a href="http://mbits/git-status/DashboardWatch-1.0.0-win32.zip" target="_blank">DashboardWatch-1.0.0-win32.zip</a><br />
+Ubuntu x64 Executable (Qt 4.x  muss installiert sein):
+<a href="http://mbits/git-status/DashboardWatch-1.0.0-win32.zip" target="_blank">DashboardWatch-1.0.0-win32.zip</a><br />
+<br />
+<strong>Selbst kompilieren:</strong><br />
+<em>git clone git@github.com:MichaelMueller/DashboardWatch.git</em><br />
+<em>cd DashboardWatch</em><br />
+<em>git checkout v1.0.1</em><br />
+<em>cmake .. -DCMAKE_BUILD_TYPE:STRING=Release -DQT_QMAKE_EXECUTABLE:FILEPATH=/usr/bin/qmake</em><br />
+<em>make</em><br />
+<em>./DashboardWatch</em>
+
+<h1>Benutzung</h1>
+Das Tray-Icon ruft alle x Minuten (einstellbar in den Optionen) den Status des Dashboards ab. Dabei f&#228;rbt sich das Icon gr&#252;n, wenn  sowohl MITK als auch MBI gr&#252;n sind. Das Icon wird rot-gr&#252;n, wenn MBI rot ist, MITK aber nicht. Das Icon wird rot, wenn beide rot sind.<br />
+Rechts-Klick auf das Tray Icon &#246;ffnet das Untermen&#252;:<br />
+<img src="dw-screen2.png" width="232" height="103" alt="" /><br />
+"Update Now" ruft den aktuellen Status des Dashboards nochmal manuell ab.<br />
+"Quit" beendet das Programm sofort.<br />
+Durch "Restore" oder per Doppelklick &#246;ffnet sich das Fenster mit den Optionen:<br />
+<img src="dw-screen3.png" width="213" height="122" alt="" /><br />
+Die "Update Rate" bestimmt den Timeout bis zum Abrufen des Dashboard Status. Minimal eine Minute. Standard: 2 Minuten.<br />
+Das Autostart Feature f&#252;hrt das Programm beim n&#228;chsten Booten automatisch aus.
+
+<h1>Limitierungen</h1> 
+In Version 1.1.0 funktioniert das Autostart Feature nur unter Windows.<br />
+
+</body>
+</html>
+

@@ -58,6 +58,7 @@ private:
     QGridLayout* m_OptionsGroupBoxLayout;
     QGroupBox* m_OptionsGroupBox;
 
+    QAction* m_UpdateNowAction;
     QAction* m_RestoreAction;
     QAction* m_QuitAction;
 

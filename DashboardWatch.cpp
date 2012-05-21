@@ -173,7 +173,7 @@
    m_UpdateRateSpinBox->setSuffix(" minutes");
    m_UpdateRateSpinBox->setValue( m_Settings.value("UpdateRate").toInt() );
 
-   m_AutoStartLabel = new QLabel(tr("Auto Start:"));
+   m_AutoStartLabel = new QLabel(tr("Autostart:"));
    m_AutoStartCheckBox = new QCheckBox;
    m_AutoStartCheckBox->setChecked( m_Settings.value("AutoStart").toBool() );
 
@@ -190,6 +190,9 @@
 
  void DashboardWatch::createActions()
  {
+   m_UpdateNowAction = new QAction(tr("&Update Now"), this);
+   connect(m_UpdateNowAction, SIGNAL(triggered()), this, SLOT(fetch()));
+
     m_RestoreAction = new QAction(tr("&Restore"), this);
     connect(m_RestoreAction, SIGNAL(triggered()), this, SLOT(showNormal()));
 
@@ -200,6 +203,7 @@
  void DashboardWatch::createTrayIcon()
  {
      m_TrayIconMenu = new QMenu(this);
+     m_TrayIconMenu->addAction(m_UpdateNowAction);
      m_TrayIconMenu->addAction(m_RestoreAction);
      m_TrayIconMenu->addAction(m_QuitAction);
 
