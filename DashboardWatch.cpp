@@ -2,6 +2,7 @@
 #include <QFileInfo>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
+#include <QDesktopServices>
 #include <iostream>
 
 #include "DashboardWatch.h"
@@ -19,7 +20,7 @@
      m_Message(""),
      m_MessageTime(6000),
      m_Title( QString(DASHBOARDWATCH_TITLE) ),
-     m_Settings(QSettings::IniFormat, 
+     m_Settings(QSettings::IniFormat,
       QSettings::UserScope,
       QCoreApplication::organizationName(),
       QCoreApplication::applicationName() ),
@@ -27,7 +28,7 @@
      m_Connected(false)
   {
     // setup internals
-    m_UpdateTimer = new QTimer(this);
+    //m_UpdateTimer = new QTimer(this);
     m_UpdateTimer->setInterval(2000*60);
 
     // setup UI
@@ -105,6 +106,18 @@
    m_Connected = true;
  }
 
+ void DashboardWatch::GotoMitkDashboardAction()
+ {
+     qDebug() << "GotoMitkDashboardAction";
+     QDesktopServices::openUrl(QUrl("http://cdash.mitk.org/index.php?project=MITK&display=project"));
+ }
+
+ void DashboardWatch::GotoMbiDashboardAction()
+ {
+     qDebug() << "GotoMbiDashboardAction";
+     QDesktopServices::openUrl(QUrl("http://mbits/cdash/index.php?project=MITK-MBI&display=project"));
+ }
+
  void DashboardWatch::setIcon(QIcon& icon)
  {
      m_TrayIcon->setIcon(icon);
@@ -161,6 +174,7 @@
       m_PreviousResult = result;
     }
 
+    pReply->deleteLater();
   }
 
  void DashboardWatch::createOptionsGroupBox()
@@ -196,6 +210,12 @@
     m_RestoreAction = new QAction(tr("&Restore"), this);
     connect(m_RestoreAction, SIGNAL(triggered()), this, SLOT(showNormal()));
 
+    m_GotoMitkDashboardAction = new QAction(tr("Go to &Mitk Dashboard"), this);
+    connect(m_GotoMitkDashboardAction, SIGNAL(triggered()), this, SLOT(GotoMitkDashboardAction()));
+
+    m_GotoMbiDashboardAction = new QAction(tr("Go to M&bi Dashboard"), this);
+    connect(m_GotoMbiDashboardAction, SIGNAL(triggered()), this, SLOT(GotoMbiDashboardAction()));
+
     m_QuitAction = new QAction(tr("&Quit"), this);
     connect(m_QuitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
  }
@@ -205,7 +225,20 @@
      m_TrayIconMenu = new QMenu(this);
      m_TrayIconMenu->addAction(m_UpdateNowAction);
      m_TrayIconMenu->addAction(m_RestoreAction);
+     m_TrayIconMenu->addAction(m_GotoMitkDashboardAction);
+     m_TrayIconMenu->addAction(m_GotoMbiDashboardAction);
      m_TrayIconMenu->addAction(m_QuitAction);
+
+     /*
+     m_GotoMitkDashboard = new QLabel;
+     m_GotoMitkDashboard->setText("<a href=\"http://cdash.mitk.org/index.php?project=MITK&display=project\">Go to Mitk Dashboard</a>");
+     m_GotoMitkDashboard->setOpenExternalLinks(true);
+
+     m_GotoMbiDashboard = new QLabel;
+     m_GotoMbiDashboard->setText("<a href=\"http://mbits/cdash/index.php?project=MITK-MBI&display=project\">Go to Mbi Dashboard</a>");
+     m_GotoMbiDashboard->setOpenExternalLinks(true);
+     */
+
 
      m_TrayIcon = new QSystemTrayIcon(this);
      m_TrayIcon->setContextMenu(m_TrayIconMenu);
@@ -224,7 +257,7 @@ void DashboardWatch::on_AutoStartCheckBox_clicked( bool checked )
   this->saveSettings();
   this->setAutoStart( checked );
 }
- 
+
 void DashboardWatch::loadSettings()
 {
   qDebug() << "loading settings";
@@ -259,8 +292,8 @@ void DashboardWatch::setAutoStart(bool autostart)
     char** argv = qApp->argv();
     std::cout << argv[0] << std::endl;
     settings.setValue("DashboardWatch.exe", argv[0] );
-  } 
-  else 
+  }
+  else
   {
     // Do not want to start on boot up
     settings.remove("DashboardWatch.exe");

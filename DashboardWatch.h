@@ -39,6 +39,8 @@ private slots:
     void replyFinished(QNetworkReply*);
     void fetch();
     void on_NewLocalSocketConnection();
+    void GotoMitkDashboardAction();
+    void GotoMbiDashboardAction();
 
 private:
     void setIcon(QIcon& index);
@@ -61,6 +63,8 @@ private:
     QAction* m_UpdateNowAction;
     QAction* m_RestoreAction;
     QAction* m_QuitAction;
+    QAction* m_GotoMitkDashboardAction;
+    QAction* m_GotoMbiDashboardAction;
 
     QSystemTrayIcon* m_TrayIcon;
     QMenu* m_TrayIconMenu;
