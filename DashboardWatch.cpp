@@ -60,7 +60,10 @@ const bool DashboardWatch::OS_IS_UBUNTU = DashboardWatch::OsIsUbuntu();
     setCentralWidget(mainWidget);
 
     setWindowTitle( m_Title );
-    this->setIcon( m_QuestionIcon );
+    if( OS_IS_UBUNTU )
+        this->setWindowIcon(m_QuestionIcon);
+    else
+        this->setIcon( m_QuestionIcon );
 
     // connect
     connect(m_UpdateRateSpinBox, SIGNAL( valueChanged (int) ),
@@ -304,11 +307,16 @@ const bool DashboardWatch::OS_IS_UBUNTU = DashboardWatch::OsIsUbuntu();
      }
      else
      {
-         QToolBar* fileToolBar = addToolBar(tr("File"));
+         /*QToolBar* fileToolBar = addToolBar(tr("File"));
          fileToolBar->addAction(m_UpdateNowAction);
          fileToolBar->addAction(m_GotoMitkDashboardAction);
          fileToolBar->addAction(m_GotoMbiDashboardAction);
-         fileToolBar->addAction(m_QuitAction);
+         fileToolBar->addAction(m_QuitAction);*/
+         m_TrayIconMenu = menuBar()->addMenu("&Menu");
+         m_TrayIconMenu->addAction(m_UpdateNowAction);
+         m_TrayIconMenu->addAction(m_GotoMitkDashboardAction);
+         m_TrayIconMenu->addAction(m_GotoMbiDashboardAction);
+         m_TrayIconMenu->addAction(m_QuitAction);
      }
 
  }
