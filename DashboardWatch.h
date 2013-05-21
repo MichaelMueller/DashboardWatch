@@ -3,6 +3,7 @@
 
 #include <QSystemTrayIcon>
 #include <QWidget>
+#include <QMainWindow>
 #include <QGridLayout>
 #include <QSettings>
 #include <QLocalServer>
@@ -19,15 +20,17 @@ class QPushButton;
 class QSpinBox;
 class QTextEdit;
 
-class DashboardWatch : public QWidget
+class DashboardWatch : public QMainWindow
 {
     Q_OBJECT
 
 public:
     DashboardWatch();
 
+    static const bool OS_IS_UBUNTU;
     void setVisible(bool visible);
     bool GetConnected() const;
+    static bool OsIsUbuntu();
 
 protected:
     void closeEvent(QCloseEvent *event);

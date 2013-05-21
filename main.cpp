@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
 
   DashboardWatch _DashboardWatch;
   _DashboardWatch.show();
-  _DashboardWatch.hide();
+  if( !DashboardWatch::OS_IS_UBUNTU )
+    _DashboardWatch.hide();
   return app.exec();
 }

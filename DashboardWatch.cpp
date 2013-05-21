@@ -9,6 +9,8 @@
 #include "DashboardWatchLogger.h"
 #include <DashboardWatchConfig.h>
 
+const bool DashboardWatch::OS_IS_UBUNTU = DashboardWatch::OsIsUbuntu();
+
   DashboardWatch::DashboardWatch()
    : m_Manager( new QNetworkAccessManager(this) ),
      m_UpdateTimer(new QTimer(this)),
@@ -42,7 +44,12 @@
     mainLayout->setContentsMargins( 4,4,4,4 );
     mainLayout->addWidget(m_StatusLabel);
     mainLayout->addWidget(m_OptionsGroupBox);
-    setLayout(mainLayout);
+
+    QWidget* mainWidget = new QWidget;
+    mainWidget->setLayout(mainLayout);
+
+
+    setCentralWidget(mainWidget);
 
     setWindowTitle( m_Title );
     this->setIcon( m_QuestionIcon );
@@ -54,7 +61,8 @@
     connect(m_AutoStartCheckBox, SIGNAL( clicked (bool) ),
             this, SLOT( on_AutoStartCheckBox_clicked( bool ) ));
 
-    connect(m_TrayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+    if( !OS_IS_UBUNTU )
+        connect(m_TrayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
             this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
 
     connect(m_Manager, SIGNAL(finished(QNetworkReply*)),
@@ -67,7 +75,8 @@
     m_LocalServer->listen( DASHBOARDWATCH_UUID );
 
     // show/start
-    m_TrayIcon->show();
+    if( !OS_IS_UBUNTU )
+        m_TrayIcon->show();
     m_UpdateTimer->start();
     this->fetch();
   }
@@ -88,10 +97,20 @@
  }
 
  void DashboardWatch::closeEvent(QCloseEvent *event)
- {
-     if (m_TrayIcon->isVisible())
+ {     
+     if( !OS_IS_UBUNTU  && m_TrayIcon->isVisible() )
      {
          hide();
+         event->ignore();
+     }
+     else
+     {
+         /*int answer = QMessageBox::question(this, "Attention", "Really close application?", QMessageBox::Yes, QMessageBox::No);
+         if( answer == QMessageBox::Yes )
+         {
+             close();
+         }*/
+         setWindowState( Qt::WindowMinimized );
          event->ignore();
      }
  }
@@ -120,7 +139,8 @@
 
  void DashboardWatch::setIcon(QIcon& icon)
  {
-     m_TrayIcon->setIcon(icon);
+     if(!OS_IS_UBUNTU)
+        m_TrayIcon->setIcon(icon);
      this->setWindowIcon(icon);
  }
 
@@ -166,10 +186,14 @@
         this->setIcon( m_QuestionIcon );
       }
 
-      m_TrayIcon->showMessage(QString(m_Title),
-      m_Message,
-      QSystemTrayIcon::Information, m_MessageTime);
-      m_TrayIcon->setToolTip(m_Message);
+      if( !OS_IS_UBUNTU )
+      {
+        m_TrayIcon->showMessage(QString(m_Title),
+            m_Message,
+            QSystemTrayIcon::Information, m_MessageTime);
+          m_TrayIcon->setToolTip(m_Message);
+      }
+
       m_StatusLabel->setText(m_Message);
       m_PreviousResult = result;
     }
@@ -220,14 +244,30 @@
     connect(m_QuitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
  }
 
+ bool DashboardWatch::OsIsUbuntu()
+ {
+     bool OsIsUbuntu = false;
+     QFile file("/etc/lsb-release");
+     if( file.exists() )
+     {
+         std::cout << "/etc/lsb-release exists!" << std::endl;
+         QString content;
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream stream(&file);
+            while (!stream.atEnd())
+            {
+                content.append( stream.readLine() );
+            }
+        }
+
+        OsIsUbuntu = content.contains( "Ubuntu" );
+     }
+     return OsIsUbuntu;
+ }
+
  void DashboardWatch::createTrayIcon()
  {
-     m_TrayIconMenu = new QMenu(this);
-     m_TrayIconMenu->addAction(m_UpdateNowAction);
-     m_TrayIconMenu->addAction(m_RestoreAction);
-     m_TrayIconMenu->addAction(m_GotoMitkDashboardAction);
-     m_TrayIconMenu->addAction(m_GotoMbiDashboardAction);
-     m_TrayIconMenu->addAction(m_QuitAction);
 
      /*
      m_GotoMitkDashboard = new QLabel;
@@ -240,8 +280,25 @@
      */
 
 
-     m_TrayIcon = new QSystemTrayIcon(this);
-     m_TrayIcon->setContextMenu(m_TrayIconMenu);
+     if( !OS_IS_UBUNTU )
+     {
+         m_TrayIconMenu = new QMenu(this);
+         m_TrayIconMenu->addAction(m_UpdateNowAction);
+         m_TrayIconMenu->addAction(m_GotoMitkDashboardAction);
+         m_TrayIconMenu->addAction(m_GotoMbiDashboardAction);
+         m_TrayIconMenu->addAction(m_QuitAction);
+         m_TrayIconMenu->addAction(m_RestoreAction);
+        m_TrayIcon = new QSystemTrayIcon(this);
+        m_TrayIcon->setContextMenu(m_TrayIconMenu);
+     }
+     else
+     {
+         QToolBar* fileToolBar = addToolBar(tr("File"));
+         fileToolBar->addAction(m_UpdateNowAction);
+         fileToolBar->addAction(m_GotoMitkDashboardAction);
+         fileToolBar->addAction(m_GotoMbiDashboardAction);
+         fileToolBar->addAction(m_QuitAction);
+     }
 
  }
 
@@ -298,17 +355,41 @@ void DashboardWatch::setAutoStart(bool autostart)
     // Do not want to start on boot up
     settings.remove("DashboardWatch.exe");
   }
-  #else
-        QMessageBox::critical(0, QObject::tr("DashboardWatch"),
-                              QObject::tr("Feature not implemented for the current platform") );
-        m_AutoStartCheckBox->setChecked(false);
-        this->saveSettings();
   #endif
 
   #ifdef Q_WS_MAC
+    QMessageBox::critical(0, QObject::tr("DashboardWatch"),
+                          QObject::tr("Feature not implemented for the current platform") );
+    m_AutoStartCheckBox->setChecked(false);
+    this->saveSettings();
   #endif
 
   #ifdef Q_WS_X11
+  if( OS_IS_UBUNTU )
+  {
+      QString filename = QDir::homePath() + QDir::separator() + ".config/autostart/DashBoardWatch.desktop";
+      std::cout << filename.toStdString() << std::endl;
+      QFile file( filename );
+      if ( file.open(QIODevice::ReadWrite) )
+      {
+          QString executable = QFileInfo( QCoreApplication::applicationFilePath() ).absoluteFilePath();
+          QTextStream stream( &file );
+          stream << "[Desktop Entry]" << endl;
+          stream << "Name=DashboardWatch" << endl;
+          stream << "Exec=" << executable << endl;
+          stream << "Icon=" << endl;
+          stream << "Comment=" << endl;
+          stream << "X-GNOME-Autostart-enabled=true" << endl;
+          file.close();
+      }
+  }
+  else
+  {
+      QMessageBox::critical(0, QObject::tr("DashboardWatch"),
+                            QObject::tr("Feature not implemented for the current platform") );
+      m_AutoStartCheckBox->setChecked(false);
+      this->saveSettings();
+  }
   #endif
 
 }
