@@ -38,16 +38,24 @@ const bool DashboardWatch::OS_IS_UBUNTU = DashboardWatch::OsIsUbuntu();
     createActions();
     createTrayIcon();
 
+    m_StatusIconLabel = new QLabel;
     m_StatusLabel = new QLabel;
     m_StatusLabel->setText(m_Message);
+
+    QHBoxLayout *statuslabelLayout = new QHBoxLayout;
+    statuslabelLayout->addWidget(m_StatusIconLabel);
+    statuslabelLayout->addWidget(m_StatusLabel);
+
+    QWidget* labelWidget = new QWidget;
+    labelWidget->setLayout(statuslabelLayout);
+
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->setContentsMargins( 4,4,4,4 );
-    mainLayout->addWidget(m_StatusLabel);
+    mainLayout->addWidget(labelWidget);
     mainLayout->addWidget(m_OptionsGroupBox);
 
     QWidget* mainWidget = new QWidget;
     mainWidget->setLayout(mainLayout);
-
 
     setCentralWidget(mainWidget);
 
@@ -140,8 +148,11 @@ const bool DashboardWatch::OS_IS_UBUNTU = DashboardWatch::OsIsUbuntu();
  void DashboardWatch::setIcon(QIcon& icon)
  {
      if(!OS_IS_UBUNTU)
+     {
         m_TrayIcon->setIcon(icon);
-     this->setWindowIcon(icon);
+        this->setWindowIcon(icon);
+     }
+     m_StatusIconLabel->setPixmap( icon.pixmap(32,32) );
  }
 
  void DashboardWatch::fetch()
@@ -250,7 +261,7 @@ const bool DashboardWatch::OS_IS_UBUNTU = DashboardWatch::OsIsUbuntu();
      QFile file("/etc/lsb-release");
      if( file.exists() )
      {
-         std::cout << "/etc/lsb-release exists!" << std::endl;
+         //std::cout << "/etc/lsb-release exists!" << std::endl;
          QString content;
         if (file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
@@ -368,19 +379,24 @@ void DashboardWatch::setAutoStart(bool autostart)
   if( OS_IS_UBUNTU )
   {
       QString filename = QDir::homePath() + QDir::separator() + ".config/autostart/DashBoardWatch.desktop";
-      std::cout << filename.toStdString() << std::endl;
       QFile file( filename );
-      if ( file.open(QIODevice::ReadWrite) )
+      if(autostart)
       {
-          QString executable = QFileInfo( QCoreApplication::applicationFilePath() ).absoluteFilePath();
-          QTextStream stream( &file );
-          stream << "[Desktop Entry]" << endl;
-          stream << "Name=DashboardWatch" << endl;
-          stream << "Exec=" << executable << endl;
-          stream << "Icon=" << endl;
-          stream << "Comment=" << endl;
-          stream << "X-GNOME-Autostart-enabled=true" << endl;
-          file.close();
+          //std::cout << filename.toStdString() << std::endl;
+          if ( file.open(QIODevice::ReadWrite) )
+          {
+              QString executable = QFileInfo( QCoreApplication::applicationFilePath() ).absoluteFilePath();
+              QTextStream stream( &file );
+              stream << "[Desktop Entry]" << endl;
+              stream << "Name=DashboardWatch" << endl;
+              stream << "Exec=" << executable << endl;
+              stream << "Type=Application" << endl;
+              file.close();
+          }
+      }
+      else
+      {
+          file.remove();
       }
   }
   else

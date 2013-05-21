@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   DashboardWatchLogger::Initialize(logFile);
   qDebug() << "Application started";
 
-  if (!QSystemTrayIcon::isSystemTrayAvailable())
+  if (!DashboardWatch::OS_IS_UBUNTU && !QSystemTrayIcon::isSystemTrayAvailable())
   {
     QMessageBox::critical(0, QObject::tr("DashboardWatch"),
     QObject::tr("I couldn't detect any system tray "

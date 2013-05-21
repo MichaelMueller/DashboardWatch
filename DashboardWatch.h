@@ -54,6 +54,7 @@ private:
     void saveSettings();
     void setAutoStart(bool autostart);
 
+    QLabel* m_StatusIconLabel;
     QLabel* m_StatusLabel;
 
     QLabel* m_UpdateRateLabel;
